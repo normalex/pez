@@ -1,0 +1,2 @@
+include vcversioner.py
+include version.txt

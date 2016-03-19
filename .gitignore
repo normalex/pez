@@ -1,0 +1,10 @@
+/dist
+/.eggs
+/pez.egg-info
+
+.coverage
+.coverage_*
+/htmlcov
+*.py[cod]
+/pez/version.py
+version.txt

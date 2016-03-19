@@ -52,7 +52,7 @@ _vcs_args_by_path = [
 def find_version(include_dev_version=True, root='%(pwd)s',
                  version_file='%(root)s/version.txt', version_module_paths=(),
                  git_args=None, vcs_args=None, decrement_dev_version=None,
-                 strip_prefix='v',
+                 strip_prefix='v', fallback_version=None,
                  Popen=subprocess.Popen, open=open):
     """Find an appropriate version number from version control.
 
@@ -107,6 +107,9 @@ def find_version(include_dev_version=True, root='%(pwd)s',
     :param strip_prefix: A string which will be stripped from the start of
         version number tags. By default this is ``'v'``, but could be
         ``'debian/'`` for compatibility with ``git-dch``.
+
+    :param fallback_version: A 2-dash delimited string that will be used when
+        no versioning repository detected and no ``version_file`` found.
 
     :param Popen: Defaults to ``subprocess.Popen``. This is for testing.
 
@@ -190,19 +193,22 @@ def find_version(include_dev_version=True, root='%(pwd)s',
 
     # VCS failed if the string is empty
     if not raw_version:
-        if version_file is None:
+        if version_file and os.path.exists(version_file):
+            with open(version_file, 'rb') as infile:
+                raw_version = infile.read().decode()
+            version_source = repr(version_file)
+        elif fallback_version:
+            raw_version = fallback_version
+            version_source = 'fallback version argument'
+        elif not version_file:
             print('%s.' % (failure,))
             show_vcs_output()
             raise SystemExit(2)
-        elif not os.path.exists(version_file):
+        else:
             print("%s and %r isn't present." % (failure, version_file))
             print("are you installing from a github tarball?")
             show_vcs_output()
             raise SystemExit(2)
-        with open(version_file, 'rb') as infile:
-            raw_version = infile.read().decode()
-        version_source = repr(version_file)
-
 
     # try to parse the version into something usable.
     try:
